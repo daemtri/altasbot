@@ -47,6 +47,7 @@ dependencies = [
 name = "altasbot"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "clap",
  "clap_complete",
  "matrix-sdk",
