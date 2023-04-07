@@ -16,11 +16,12 @@ pub struct RunArgs {
 }
 
 impl RunArgs {
-    pub fn run(&self) {
+    pub async fn run(&self) -> anyhow::Result<()> {
         let bot = crate::matrixbot::bot::Bot {
             user_id: self.account.clone(),
             password: self.password.clone(),
         };
-        bot.run();
+        bot.run().await?;
+        Ok(())
     }
 }

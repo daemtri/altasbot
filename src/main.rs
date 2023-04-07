@@ -16,11 +16,13 @@ enum Commands {
     Run(cmd::run::RunArgs),
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Run(args) => {
-            args.run();
+            args.run().await?;
         }
     }
+    Ok(())
 }
