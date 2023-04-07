@@ -17,7 +17,10 @@ impl Bot {
             .await?;
 
         client.login_username(&user, &self.password).send().await?;
-
+        for i in 1..100 {
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            println!("count {}", i);
+        }
         Ok(())
     }
 }

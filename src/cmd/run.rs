@@ -1,4 +1,5 @@
 use clap::Args;
+use tokio::signal;
 
 #[derive(Args)]
 pub struct RunArgs {
@@ -17,11 +18,28 @@ pub struct RunArgs {
 
 impl RunArgs {
     pub async fn run(&self) -> anyhow::Result<()> {
+        let default_panic = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            default_panic(info);
+            std::process::exit(1);
+        }));
+
         let bot = crate::matrixbot::bot::Bot {
             user_id: self.account.clone(),
             password: self.password.clone(),
         };
-        bot.run().await?;
-        Ok(())
+        tokio::spawn(async move {
+            let result = bot.run().await;
+            if let Err(err) = result {
+                panic!("Unable to run bot: {}", err);
+            }
+        });
+        match signal::ctrl_c().await {
+            Ok(()) => Ok(()),
+            Err(err) => {
+                eprintln!("Unable to listen for shutdown signal: {}", err);
+                Err(err.into())
+            }
+        }
     }
 }
