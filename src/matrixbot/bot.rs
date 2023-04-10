@@ -35,7 +35,9 @@ impl Bot {
                 println!("Received message: {}", text_content.body);
                 //    "formatted_body": "Hello <a href='https://matrix.to/#/@alice:example.org'>Alice</a>!"
                 let Some(formatted) = text_content.formatted else {return ;};
-                let mention_regexp = Regex::new(r#"<a[^>]*?>([^<]*?@[\w\.]+)</a>"#).unwrap();
+                let mention_regexp =
+                    Regex::new(r#"<a\s+href='https://matrix.to/#/(?P<account>[^']+)'>[^<]+</a>"#)
+                        .unwrap();
                 if let Some(mentions) = mention_regexp.captures(formatted.body.as_str()) {
                     // 遍历判断是否提到自己
                     let user = client.user_id().unwrap();
