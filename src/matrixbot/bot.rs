@@ -1,10 +1,14 @@
-use anyhow;
+use anyhow::{self, Context};
 use matrix_sdk::{
     config::SyncSettings,
     room::Room,
     ruma::{
-        events::room::message::{
-            MessageType, OriginalSyncRoomMessageEvent, Relation, RoomMessageEventContent,
+        events::{
+            room::message::{
+                MessageType, OriginalSyncRoomMessageEvent, Relation, RoomMessageEvent,
+                RoomMessageEventContent, SyncRoomMessageEvent,
+            },
+            AnySyncTimelineEvent,
         },
         UserId,
     },
@@ -46,14 +50,21 @@ impl Bot {
                             let mention = mention.as_str();
                             if mention == user.to_string() {
                                 println!("Mentioned by {}", ev.sender);
+                                room.typing_notice(true).await.unwrap();
                                 break;
                             }
                         }
                     }
                 }
+                let timeline_event = room.event(&ev.event_id).await.unwrap();
+                let event_content = timeline_event
+                    .event
+                    .deserialize_as::<RoomMessageEvent>()
+                    .unwrap();
+                let original_message = event_content.as_original().unwrap();
 
-                let content = RoomMessageEventContent::text_plain("Hello World!");
-                println!("sending message {}", content.body());
+                let content = RoomMessageEventContent::text_plain("Hello World!")
+                    .make_reply_to(original_message);
                 room.send(content, None).await.unwrap();
                 println!("message sent");
             },
