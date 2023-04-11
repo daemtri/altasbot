@@ -1,14 +1,10 @@
-use anyhow::{self, Context};
+use anyhow::{self};
 use matrix_sdk::{
     config::SyncSettings,
     room::Room,
     ruma::{
-        events::{
-            room::message::{
-                MessageType, OriginalSyncRoomMessageEvent, Relation, RoomMessageEvent,
-                RoomMessageEventContent, SyncRoomMessageEvent,
-            },
-            AnySyncTimelineEvent,
+        events::room::message::{
+            MessageType, OriginalSyncRoomMessageEvent, RoomMessageEvent, RoomMessageEventContent,
         },
         UserId,
     },
@@ -34,6 +30,10 @@ impl Bot {
 
         client.add_event_handler(
             |ev: OriginalSyncRoomMessageEvent, room: Room, client: Client| async move {
+                // 判断ev的发送者是否是自己
+                if ev.sender == client.user_id().unwrap() {
+                    return;
+                }
                 let Room::Joined(room) = room else {return ;};
                 let MessageType::Text(text_content) = ev.content.msgtype else {return ;};
                 println!("Received message: {}", text_content.body);
@@ -42,6 +42,8 @@ impl Bot {
                 let mention_regexp =
                     Regex::new(r#"<a\s+href='https://matrix.to/#/(?P<account>[^']+)'>[^<]+</a>"#)
                         .unwrap();
+
+                let mut mention_me = false;
                 if let Some(mentions) = mention_regexp.captures(formatted.body.as_str()) {
                     // 遍历判断是否提到自己
                     let user = client.user_id().unwrap();
@@ -51,11 +53,16 @@ impl Bot {
                             if mention == user.to_string() {
                                 println!("Mentioned by {}", ev.sender);
                                 room.typing_notice(true).await.unwrap();
+                                mention_me = true;
                                 break;
                             }
                         }
                     }
                 }
+                if !mention_me {
+                    return;
+                }
+
                 let timeline_event = room.event(&ev.event_id).await.unwrap();
                 let event_content = timeline_event
                     .event
@@ -63,8 +70,8 @@ impl Bot {
                     .unwrap();
                 let original_message = event_content.as_original().unwrap();
 
-                let content = RoomMessageEventContent::text_plain("Hello World!")
-                    .make_reply_to(original_message);
+                let content =
+                    RoomMessageEventContent::text_plain("嗯......").make_reply_to(original_message);
                 room.send(content, None).await.unwrap();
                 println!("message sent");
             },
