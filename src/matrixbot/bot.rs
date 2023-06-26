@@ -3,8 +3,13 @@ use matrix_sdk::{
     config::SyncSettings,
     room::Room,
     ruma::{
-        events::room::message::{
-            MessageType, OriginalSyncRoomMessageEvent, RoomMessageEvent, RoomMessageEventContent,
+        events::{
+            room::message::{
+                MessageType, OriginalRoomMessageEvent, OriginalSyncRoomMessageEvent,
+                RoomMessageEvent, RoomMessageEventContent,
+            },
+            AnyMessageLikeEvent, AnySyncMessageLikeEvent, AnySyncTimelineEvent, MessageLikeEvent,
+            OriginalMessageLikeEvent, OriginalSyncMessageLikeEvent, SyncMessageLikeEvent,
         },
         UserId,
     },

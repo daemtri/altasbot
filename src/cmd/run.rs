@@ -1,7 +1,8 @@
 use clap::Args;
+use serde::{Deserialize, Serialize};
 use tokio::signal;
 
-#[derive(Args)]
+#[derive(Args, Deserialize, Serialize)]
 pub struct RunArgs {
     /// 服务名称
     #[arg(value_name = "NAME")]
